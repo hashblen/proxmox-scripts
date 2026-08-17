@@ -149,7 +149,7 @@ net.ipv4.ip_forward = 1
 net.ipv6.conf.all.forwarding = 1
 EOF
 
-sysctl --system >/dev/null
+sysctl -p /etc/sysctl.d/99-tailscale.conf
 
 
 echo "[+] Configuring Tailscale"
@@ -170,6 +170,14 @@ EOF
 
 systemctl daemon-reload
 
+
+if grep -qE '^[[:space:]]*DNS[[:space:]]*=' "$WG_FILE"; then
+    if ! command -v resolvconf >/dev/null; then
+        echo "[+] WireGuard DNS configured; installing resolvconf provider"
+        apt update
+        apt install -y openresolv
+    fi
+fi
 
 echo "[+] Starting WireGuard"
 
